@@ -1,0 +1,44 @@
+# Specifies the version of the Docker Compose file format. '3.8' is a stable, modern version.
+version: '3.8'
+
+# This is the main section where we define our application's services (containers).
+services:
+  # This is the service for our FastAPI application.
+  api:
+    # 'build: .' tells Docker Compose to build the image from the Dockerfile in the current directory (the 'backend' folder).
+    build: .
+    # 'ports' maps a port from your host machine to a port inside the container.
+    # We map port 8000 on our local machine to port 8000 inside the container, where uvicorn is running.
+    ports:
+      - "8000:8000"
+    # 'volumes' syncs a directory on your host machine with a directory inside the container.
+    # This is ESSENTIAL for development. Any change you make in './app' is instantly reflected in '/app' inside the container.
+    volumes:
+      - ./app:/app
+    # 'env_file' tells this service to load environment variables from the specified file.
+    # This is how we'll pass database connection details to our app later.
+    env_file:
+      - ./.env
+    # 'depends_on' tells Docker Compose that the 'api' service cannot start until the 'db' service is healthy and running.
+    depends_on:
+      - db
+
+  # This is the service for our PostgreSQL database.
+  db:
+    # 'image' tells Docker Compose to pull the official postgres image, version 13, from Docker Hub.
+    # Using a specific version is a best practice for reproducibility.
+    image: postgres:13
+    # We also use a volume for the database. This is CRUCIAL.
+    # It maps a directory on your host machine to the directory inside the container where Postgres stores its data.
+    # This ensures that your database data PERSISTS even if you stop and restart the container. Without this, your data would be wiped every time.
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    # 'env_file' loads the .env file to configure the database.
+    # The postgres image automatically uses these specific variables to initialize the database, user, and password.
+    env_file:
+      - ./.env
+
+# This top-level 'volumes' key defines a named volume.
+# Docker manages this volume for us, ensuring our database data is safely stored on the host machine.
+volumes:
+  postgres_data:
