@@ -1,2 +1,5 @@
 /saved_model
+backend/app/model_assets/*.pkl
 backend/.env
+/.venv
+/backend/app/__pycache__

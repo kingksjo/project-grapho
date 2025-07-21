@@ -14,7 +14,7 @@ services:
     # 'volumes' syncs a directory on your host machine with a directory inside the container.
     # This is ESSENTIAL for development. Any change you make in './app' is instantly reflected in '/app' inside the container.
     volumes:
-      - ./app:/app
+      - ./app:/app/app
     # 'env_file' tells this service to load environment variables from the specified file.
     # This is how we'll pass database connection details to our app later.
     env_file:

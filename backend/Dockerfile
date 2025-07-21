@@ -21,7 +21,7 @@ RUN pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -r re
 # Now, copy the application code (everything in the 'app' sub-directory) into the container's /app directory.
 # Because this is a separate step, any changes to our Python code will only invalidate this layer,
 # not the dependency installation layer above, making builds much faster.
-COPY ./app /app
+COPY ./app /app/app
 
 # --- Run the Application ---
 # This is the command that will be run when a container is started from this image.
