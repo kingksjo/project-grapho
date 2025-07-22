@@ -1,8 +1,10 @@
-
 import logging
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException
 from contextlib import asynccontextmanager
+from sqlalchemy.orm import Session
+from sqlalchemy import text
 from .model_loader import load_model_assets
+from . import models, database
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -20,6 +22,12 @@ async def lifespan(app: FastAPI):
         assets = load_model_assets()
         model_assets.update(assets)
         logger.info(f"✅ Application startup completed. Loaded {len(assets)} model assets.")
+        
+        # Initialize database tables
+        logger.info("🗄️ Initializing database...")
+        database.init_db()
+        logger.info("✅ Database initialization completed.")
+        
     except Exception as e:
         logger.error(f"❌ Failed to load model assets during startup: {str(e)}")
         logger.warning("⚠️  Application will start but may have limited functionality.")
@@ -38,6 +46,31 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+# Dependency to get a DB session
+def get_db():
+    db = database.SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+@app.get("/db-check")
+def database_check(db: Session = Depends(get_db)):
+    """
+    A simple endpoint to verify the database connection.
+    """
+    try:
+        # Perform a simple, fast, read-only query.
+        # This query asks the database for its current version.
+        result = db.execute(text("SELECT 1"))
+        if result.scalar_one() == 1:
+            logger.info("✅ Database connection verified successfully")
+            return {"status": "ok", "message": "Database connection successful!"}
+    except Exception as e:
+        logger.error(f"❌ Database connection failed: {str(e)}")
+        # If anything goes wrong, raise an HTTP exception.
+        raise HTTPException(status_code=500, detail=f"Database connection failed: {e}")
 
 @app.get("/")
 def read_root():
