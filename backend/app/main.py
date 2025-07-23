@@ -4,7 +4,8 @@ from contextlib import asynccontextmanager
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from .model_loader import load_model_assets
-from . import models, database
+from . import models, database, seed_db
+import typer
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -23,10 +24,7 @@ async def lifespan(app: FastAPI):
         model_assets.update(assets)
         logger.info(f"✅ Application startup completed. Loaded {len(assets)} model assets.")
         
-        # Initialize database tables
-        logger.info("🗄️ Initializing database...")
-        database.init_db()
-        logger.info("✅ Database initialization completed.")
+        
         
     except Exception as e:
         logger.error(f"❌ Failed to load model assets during startup: {str(e)}")
@@ -38,6 +36,9 @@ async def lifespan(app: FastAPI):
     logger.info("🛑 Application shutdown initiated...")
     model_assets.clear()
     logger.info("✅ Application shutdown completed.")
+
+
+cli_app = typer.Typer()
 
 # Create the FastAPI app instance with the lifespan manager
 app = FastAPI(
@@ -88,6 +89,32 @@ def health_check():
         "available_assets": list(model_assets.keys()) if model_assets else []
     }
 
+
+@cli_app.command("seed-db-command")
+def seed_db_command():
+    """
+    Command-line utility to seed the database with movie data.
+    """
+    typer.echo("Seeding process initiated...")
+    
+    # We can't use the 'model_assets' from the running app,
+    # so we'll load them fresh for this one-off command.
+    assets = load_model_assets()
+    movies_df = assets.get('movies_df')
+    
+    if movies_df is not None:
+        db = database.SessionLocal()
+        try:
+            # Call our refactored seeder function
+            seed_db.seed_movies_table(db, movies_df)
+        finally:
+            db.close()
+    else:
+        typer.echo("Could not load movies_df. Aborting.")
+
+
+if __name__ == "__main__":
+    cli_app()
 # You will add your other endpoints here later, for example:
 # @app.get("/recommendations/{movie_id}")
 # def get_recommendations(movie_id: str):
