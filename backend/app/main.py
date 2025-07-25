@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from .model_loader import load_model_assets
 from . import models, database, seed_db
+from .routers import router as user_router
 import typer
 
 # Set up logging
@@ -55,6 +56,9 @@ def get_db():
         yield db
     finally:
         db.close()
+
+# Include the user router
+app.include_router(user_router)
 
 @app.get("/db-check")
 def database_check(db: Session = Depends(get_db)):
