@@ -13,3 +13,5 @@ typer
 bcrypt>=4.0.1
 passlib[bcrypt]
 email-validator
+python-jose[cryptography]
+python-multipart
