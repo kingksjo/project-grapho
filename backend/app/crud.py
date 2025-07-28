@@ -53,3 +53,80 @@ def create_user(db: Session, user: schemas.UserCreate):
     db.refresh(db_user)
     
     return db_user
+
+
+
+# ---- USER INTERACTIONS ----
+
+def update_user_genres(db: Session, user_id: str, genres: schemas.UserUpdateGenres):
+    """
+    Updates the favorite_genres for a specific user.
+    """
+    # First, get the user from the database
+    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if db_user:
+        # Convert the list of genres into a single comma-separated string for storage
+        db_user.favorite_genres = ",".join(genres.genres)
+        db.commit()
+        db.refresh(db_user)
+    return db_user
+
+def create_or_update_interaction(db: Session, user_id: str, interaction: schemas.InteractionCreate):
+    """
+    Creates a new interaction for a user and a movie.
+    If an interaction already exists for this user/movie pair, it updates the type.
+    """
+    # First, we need to find the internal ID of the movie from its tconst
+    movie = db.query(models.Movie).filter(models.Movie.tconst == interaction.tconst).first()
+    if not movie:
+        # If the movie doesn't exist in our DB, we can't create an interaction for it.
+        return None
+
+    # Check if an interaction for this user and movie already exists
+    existing_interaction = db.query(models.Interaction).filter(
+        models.Interaction.user_id == user_id,
+        models.Interaction.movie_id == movie.id
+    ).first()
+
+    if existing_interaction:
+        # If it exists, update the interaction_type
+        existing_interaction.interaction_type = interaction.interaction_type
+    else:
+        # If it doesn't exist, create a new one
+        new_interaction = models.Interaction(
+            user_id=user_id,
+            movie_id=movie.id,
+            interaction_type=interaction.interaction_type
+        )
+        db.add(new_interaction)
+    
+    db.commit()
+    # We can query for it again to return the final state
+    return db.query(models.Interaction).filter(
+        models.Interaction.user_id == user_id,
+        models.Interaction.movie_id == movie.id
+    ).first()
+
+def get_user_liked_movies(db: Session, user_id: str, limit: int = 15):
+    """
+    Gets the most recent movies a user has 'liked'.
+    This will be used to build their taste profile.
+    """
+    # Query the interactions table
+    interactions = db.query(models.Interaction).filter(
+        models.Interaction.user_id == user_id,
+        models.Interaction.interaction_type == 'like'
+    ).order_by(
+        models.Interaction.created_at.desc()  # Order by most recent first
+    ).limit(limit).all()
+
+    # The recommendation engine needs the 'Title (Year)' format.
+    # We access the related movie object for each interaction to build this string.
+    liked_movies_profile = []
+    for interaction in interactions:
+        # The 'interaction.movie' relationship we defined in models.py is key here
+        if interaction.movie:
+            title_year = f"{interaction.movie.primaryTitle} ({interaction.movie.startYear})"
+            liked_movies_profile.append(title_year)
+    
+    return liked_movies_profile
