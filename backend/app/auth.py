@@ -1,3 +1,7 @@
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.orm import Session
+from . import database, models, schemas
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta, timezone
@@ -54,3 +58,50 @@ def create_access_token(data: dict):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     
     return encoded_jwt
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login")
+
+def verify_access_token(token: str, credentials_exception):
+    """
+    Decodes the JWT to get the user_id from the payload.
+    """
+    try:
+        # Decode the JWT using our secret key and algorithm
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        # Extract the user_id from the payload
+        user_id: str = payload.get("user_id")
+
+        if user_id is None:
+            # If there is no user_id in the token, raise an error
+            raise credentials_exception
+        
+        # We can create a Pydantic schema for the token data if we want
+        # For now, just returning the user_id is fine.
+        return user_id
+    
+    except JWTError:
+        # If the token is invalid (bad signature, expired, etc.), raise an error
+        raise credentials_exception
+
+
+# --- NEW: The Main "Get Current User" Dependency ---
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(database.get_db)):
+    """
+    A dependency that can be used in any protected endpoint.
+    It verifies the token and returns the full user object from the database.
+    """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
+    # Verify the token to get the user's ID
+    user_id = verify_access_token(token, credentials_exception)
+    
+    # Get the user from the database using the ID from the token
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+
+    # You could add more checks here, e.g., if user.is_active is False
+    
+    return user

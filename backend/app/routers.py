@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from . import crud, schemas, database 
+from . import crud, schemas, database, models
 from fastapi.security import OAuth2PasswordRequestForm
 from . import auth
 
@@ -10,16 +10,10 @@ router = APIRouter(
     tags=["users"]    # Group these routes under "users" in the API docs
 )
 
-# Dependency to get a DB session (we can define it here or import it)
-def get_db():
-    db = database.SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+
 
 @router.post("/register", response_model=schemas.UserResponse, status_code=201)
-def create_new_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+def create_new_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
     """
     Endpoint to register a new user.
     """
@@ -36,7 +30,7 @@ def create_new_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return new_user
 
 @router.post("/login", response_model=schemas.Token)
-def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
     """
     Endpoint for user login. Returns a JWT access token.
     """
@@ -57,3 +51,13 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
     
     # 3. Return the token
     return {"access_token": access_token, "token_type": "bearer"}
+
+@router.get("/me", response_model=schemas.UserResponse)
+def read_users_me(current_user: models.User = Depends(auth.get_current_user)):
+    """
+    A protected endpoint that returns the information for the currently logged-in user.
+    """
+    # The 'current_user' is provided by the get_current_user dependency.
+    # If the request gets this far, the user is authenticated.
+    # We can just return the user object, and FastAPI will serialize it.
+    return current_user
