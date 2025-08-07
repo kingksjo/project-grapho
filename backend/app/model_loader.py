@@ -86,6 +86,10 @@ def load_model_assets():
     else:
         logger.warning("⚠️  Some model assets failed to load. Check the logs above for details.")
     
+    # Add the recommendation function to the loaded assets
+    from .recommender import get_recommendations_v_final
+    loaded_assets['recommendation_function'] = get_recommendations_v_final
+    
     logger.info(f"Loaded assets: {list(loaded_assets.keys())}")
     logger.info("=== Model assets loading process completed ===")
     

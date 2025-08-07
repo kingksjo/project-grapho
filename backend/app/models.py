@@ -24,6 +24,7 @@ class Movie(Base):
     primaryTitle = Column(String, nullable=False)
     startYear = Column(Integer, nullable=False)
     genres = Column(String, nullable=True)
+    numVotes = Column(Integer, server_default='0', nullable=False)
 
 # --- Interaction Table ---
 class Interaction(Base):

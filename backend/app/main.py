@@ -4,16 +4,13 @@ from contextlib import asynccontextmanager
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from .model_loader import load_model_assets
-from . import models, database, seed_db
-from .routers import router as user_router
+from . import models, database, seed_db, assets
+from .routers import router as user_router, movie_router
 import typer
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# A dictionary to hold our loaded model assets
-model_assets = {}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -21,9 +18,9 @@ async def lifespan(app: FastAPI):
     logger.info("🚀 Application startup initiated...")
     try:
         logger.info("📥 Loading model assets...")
-        assets = load_model_assets()
-        model_assets.update(assets)
-        logger.info(f"✅ Application startup completed. Loaded {len(assets)} model assets.")
+        loaded_assets = load_model_assets()
+        assets.update_model_assets(loaded_assets)
+        logger.info(f"✅ Application startup completed. Loaded {len(loaded_assets)} model assets.")
         
         
         
@@ -35,7 +32,7 @@ async def lifespan(app: FastAPI):
     
     # This code runs on shutdown
     logger.info("🛑 Application shutdown initiated...")
-    model_assets.clear()
+    assets.clear_model_assets()
     logger.info("✅ Application shutdown completed.")
 
 
@@ -57,8 +54,9 @@ def get_db():
     finally:
         db.close()
 
-# Include the user router
+# Include the routers
 app.include_router(user_router)
+app.include_router(movie_router)
 
 @app.get("/db-check")
 def database_check(db: Session = Depends(get_db)):
@@ -79,6 +77,7 @@ def database_check(db: Session = Depends(get_db)):
 
 @app.get("/")
 def read_root():
+    model_assets = assets.get_model_assets()
     return {
         "message": "Recommender API is running!",
         "status": "healthy",
@@ -87,6 +86,7 @@ def read_root():
 
 @app.get("/health")
 def health_check():
+    model_assets = assets.get_model_assets()
     return {
         "status": "healthy",
         "model_assets_loaded": len(model_assets),

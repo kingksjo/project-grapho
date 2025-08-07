@@ -21,7 +21,8 @@ def seed_movies_table(db: Session, movies_df: pd.DataFrame):
                 tconst=row['tconst'],
                 primaryTitle=row['primaryTitle'],
                 startYear=int(row['startYear']), # Ensure startYear is an integer
-                genres=row['genres']
+                genres=row['genres'],
+                numVotes=int(row['numVotes'])
             )
             new_movies.append(movie_data)
         
