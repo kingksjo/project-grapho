@@ -15,25 +15,25 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # This code runs on startup
-    logger.info("🚀 Application startup initiated...")
+    logger.info("Application startup initiated...")
     try:
-        logger.info("📥 Loading model assets...")
+        logger.info("Loading model assets...")
         loaded_assets = load_model_assets()
         assets.update_model_assets(loaded_assets)
-        logger.info(f"✅ Application startup completed. Loaded {len(loaded_assets)} model assets.")
+        logger.info(f"Application startup completed. Loaded {len(loaded_assets)} model assets.")
         
         
         
     except Exception as e:
-        logger.error(f"❌ Failed to load model assets during startup: {str(e)}")
-        logger.warning("⚠️  Application will start but may have limited functionality.")
+        logger.error(f"Failed to load model assets during startup: {str(e)}")
+        logger.warning(" Application will start but may have limited functionality.")
     
     yield
     
     # This code runs on shutdown
-    logger.info("🛑 Application shutdown initiated...")
+    logger.info("Application shutdown initiated...")
     assets.clear_model_assets()
-    logger.info("✅ Application shutdown completed.")
+    logger.info("Application shutdown completed.")
 
 
 cli_app = typer.Typer()
@@ -68,10 +68,10 @@ def database_check(db: Session = Depends(get_db)):
         # This query asks the database for its current version.
         result = db.execute(text("SELECT 1"))
         if result.scalar_one() == 1:
-            logger.info("✅ Database connection verified successfully")
+            logger.info("Database connection verified successfully")
             return {"status": "ok", "message": "Database connection successful!"}
     except Exception as e:
-        logger.error(f"❌ Database connection failed: {str(e)}")
+        logger.error(f"Database connection failed: {str(e)}")
         # If anything goes wrong, raise an HTTP exception.
         raise HTTPException(status_code=500, detail=f"Database connection failed: {e}")
 
