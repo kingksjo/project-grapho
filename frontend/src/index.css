@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Global reset without custom border utility to avoid runtime errors */
+  
+  body {
+    @apply bg-background text-text-primary font-sans;
+    @apply antialiased;
+    margin: 0;
+    min-height: 100vh;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-card-bg/90 backdrop-blur-md border border-ui-border rounded-xl;
+  }
+  
+  .movie-card {
+    @apply transition-all duration-300 ease-out hover:scale-105 hover:shadow-2xl;
+  }
+  
+  .btn-primary {
+    @apply bg-accent hover:bg-accent-hover text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+  }
+  
+  .btn-ghost {
+    @apply text-text-secondary hover:text-text-primary hover:bg-surface/50 font-medium py-2 px-4 rounded-lg transition-all duration-200;
+  }
+}
