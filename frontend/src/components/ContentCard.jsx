@@ -14,7 +14,7 @@ const ContentCard = ({ item, index, isMovie = false }) => (
         </div>
       </div>
       <div className="mt-3 flex items-center">
-        <div className="bg-gray-700 rounded-full w-8 h-8 flex items-center justify-center text-white font-bold text-sm mr-3">
+        <div className="bg-gray-700 rounded-full w-11 h-11 flex items-center justify-center text-white font-bold text-3xl mr-3">
           {index}
         </div>
         <div>
