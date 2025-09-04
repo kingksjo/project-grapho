@@ -1,5 +1,91 @@
-import { useState } from 'react'
+import { tvShows, movies, mustSeeHits } from "./data";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import SectionHeader from "./components/SectionHeader";
+import ContentCard from "./components/ContentCard";
+import FullListPage from "./components/FullListPage";
 
+const App = () => {
+  
+  
+  return (
+    <Router>
+      <div className="bg-black min-h-screen p-8">
+        <div className="max-w-7xl mx-auto">
+          <Routes>
+
+          {/* TV Shows Section */}
+          <Route path="/"
+            element={
+              <>
+              <section className="mb-12">
+            <SectionHeader title="Top 10 TV Shows" to="/tvshows" />
+            <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
+              {tvShows.map((show, index) => (
+                <ContentCard
+                  key={show.id}
+                  item={show}
+                  index={index + 1}
+                  isMovie={false}
+                />
+              ))}
+            </div>
+          </section>
+
+          {/* Movies Section */}
+          <section>
+            <SectionHeader title="Top 10 Movies" to="/movies"/>
+            <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
+              {movies.map((movie, index) => (
+                <ContentCard
+                  key={movie.id}
+                  item={movie}
+                  index={index + 1}
+                  isMovie={true}
+                />
+              ))}
+            </div>
+          </section>
+
+          {/* Must-See Hits */}
+          <section>
+            <SectionHeader title="Must-See Hits" to="/must-see"/>
+            <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
+              {mustSeeHits.map((item, index) => (
+                <ContentCard
+                  key={item.id + "-mustsee"}
+                  item={item}
+                  index={index + 1}
+                />
+              ))}
+            </div>
+          </section>
+              </>
+            }
+          />
+          {/* Full lists */}
+            <Route path="/tvshows" element={<FullListPage title="All TV Shows" items={tvShows} />} />
+            <Route path="/movies" element={<FullListPage title="All Movies" items={movies} />} />
+            <Route path="/mustsee" element={<FullListPage title="Must-See Hits" items={mustSeeHits} />} />
+          </Routes>
+          </div>
+        <style jsx>{`
+          .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+          .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
+      </div>
+    </Router>
+  );
+};
+
+export default App;
+
+{
+  /** 
 function App() {
   const [count, setCount] = useState(0)
 
@@ -40,3 +126,5 @@ function App() {
 }
 
 export default App
+*/
+}
